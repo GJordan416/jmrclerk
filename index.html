@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>United States District Court - PACER Staff Case Entry</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!--
+    README (Quick Deploy):
+    1) Save this file as index.html
+    2) Commit to a GitHub repo
+    3) Settings → Pages → Source: Deploy from branch → / (root)
+    4) Optional: customize CNAME
+  -->
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <header class="bg-blue-900 text-white p-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/US-Court-Seal.svg/120px-US-Court-Seal.svg.png" alt="Court Seal" class="w-12 h-12" />
+        <div>
+          <h1 class="text-2xl font-bold">PACER Case Entry System</h1>
+          <p class="text-xs">United States District Court – Chambers of Chief Judge Jake Robinson</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="userBadge" class="hidden px-2 py-1 rounded bg-blue-700 text-white text-xs"></span>
+        <button id="loginBtn" class="bg-white text-blue-900 px-3 py-1 rounded hover:bg-gray-100 text-sm">Sign in</button>
+        <button id="logoutBtn" class="hidden bg-white text-blue-900 px-3 py-1 rounded hover:bg-gray-100 text-sm">Sign out</button>
+      </div>
+    </div>
+    <p class="text-center text-xs mt-2 opacity-90">Confidential Court Information – For Internal Use Only</p>
+  </header>
+
+  <main class="p-6 max-w-6xl mx-auto">
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6">
+      <strong class="font-bold">WARNING:</strong>
+      <span class="block sm:inline">This system contains confidential court data. Unauthorized access or use is prohibited under 28 U.S.C. § 453.</span>
+    </div>
+
+    <!-- Role Legend -->
+    <div class="mb-6 text-sm text-gray-700 bg-white p-3 rounded border">
+      <strong>Roles & Permissions</strong>
+      <ul class="list-disc ml-6 mt-2">
+        <li><span class="font-medium">Docket Clerk</span>: Full access (add cases, add/remove docket, import/export).</li>
+        <li><span class="font-medium">Judge</span>: Read all; add docket entries; cannot add cases, remove docket, or import/export.</li>
+        <li><span class="font-medium">Staff</span>: Read-only access.</li>
+      </ul>
+    </div>
+
+    <!-- New Case Entry (role-gated) -->
+    <section class="mb-8">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold mb-4">New Case Entry</h2>
+        <span id="caseFormLock" class="text-xs text-gray-500"></span>
+      </div>
+      <form id="caseForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded border">
+        <input type="text" id="caseNumber" placeholder="Case Number" class="p-2 border rounded" required />
+        <input type="text" id="caseTitle" placeholder="Case Title" class="p-2 border rounded" required />
+        <input type="text" id="parties" placeholder="Parties Involved" class="p-2 border rounded md:col-span-2" required />
+        <select id="caseType" class="p-2 border rounded" required>
+          <option value="">Select Case Type</option>
+          <option value="Civil">Civil</option>
+          <option value="Criminal">Criminal</option>
+          <option value="Bankruptcy">Bankruptcy</option>
+          <option value="Appeals">Appeals</option>
+        </select>
+        <input type="text" id="assignedJudge" placeholder="Assigned Judge (default: Chief Judge Jake Robinson)" class="p-2 border rounded" />
+        <textarea id="caseNotes" placeholder="Internal Notes" class="p-2 border rounded md:col-span-2"></textarea>
+        <div class="md:col-span-2 flex gap-2">
+          <button type="submit" class="bg-blue-700 text-white p-2 rounded hover:bg-blue-800">Add Case</button>
+          <button type="button" id="clearFormBtn" class="bg-gray-200 p-2 rounded hover:bg-gray-300">Clear</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Search -->
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold mb-4">Search Cases</h2>
+      <div class="bg-white p-4 rounded border">
+        <input type="text" id="searchInput" placeholder="Search by Case Number, Title, Parties, Judge" class="p-2 border rounded w-full mb-4" />
+        <div id="caseList" class="space-y-4"></div>
+      </div>
+    </section>
+
+    <!-- Data Management (role-gated) -->
+    <section class="mb-8">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold mb-4">Data Management</h2>
+        <span id="dataMgmtLock" class="text-xs text-gray-500"></span>
+      </div>
+      <div class="bg-white p-4 rounded border flex flex-wrap gap-3">
+        <button id="exportBtn" class="bg-green-700 text-white p-2 rounded hover:bg-green-800">Export Cases</button>
+        <input type="file" id="importFile" class="hidden" accept="application/json" />
+        <button id="importBtn" class="bg-yellow-700 text-white p-2 rounded hover:bg-yellow-800">Import Cases</button>
+        <button id="exportAuditBtn" class="bg-indigo-700 text-white p-2 rounded hover:bg-indigo-800">Export Audit Log</button>
+      </div>
+    </section>
+
+    <!-- Audit Log -->
+    <section class="mb-20">
+      <h2 class="text-xl font-semibold mb-4">Audit Log</h2>
+      <div class="bg-white p-4 rounded border">
+        <div class="flex flex-col md:flex-row gap-3 md:items-center mb-3">
+          <input id="auditSearch" class="p-2 border rounded flex-1" placeholder="Filter by user, action, case number" />
+          <button id="clearAuditBtn" class="bg-gray-200 p-2 rounded hover:bg-gray-300 text-sm">Clear Filter</button>
+        </div>
+        <ul id="auditList" class="space-y-1 text-sm"></ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
+    <div class="bg-white w-[95%] max-w-md rounded-2xl p-6 shadow-xl">
+      <h3 class="text-lg font-semibold mb-2">Court Staff Sign In</h3>
+      <p class="text-xs text-gray-600 mb-4">This is a UI simulation for internal use. No credentials are transmitted.</p>
+      <div class="space-y-3">
+        <input id="userName" class="p-2 border rounded w-full" placeholder="Your name (e.g., Jordan)" />
+        <select id="userRole" class="p-2 border rounded w-full">
+          <option value="Docket Clerk">Docket Clerk</option>
+          <option value="Judge">Judge</option>
+          <option value="Staff">Staff</option>
+        </select>
+      </div>
+      <div class="mt-5 flex justify-end gap-2">
+        <button id="cancelLogin" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
+        <button id="confirmLogin" class="px-3 py-1 rounded bg-blue-700 text-white hover:bg-blue-800">Sign In</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Persistence ---
+    let cases = JSON.parse(localStorage.getItem('pacerCases')) || [];
+    let audit = JSON.parse(localStorage.getItem('pacerAuditLog')) || [];
+    let currentUser = JSON.parse(localStorage.getItem('pacerUser')) || null;
+
+    function saveCases() { localStorage.setItem('pacerCases', JSON.stringify(cases)); }
+    function saveAudit() { localStorage.setItem('pacerAuditLog', JSON.stringify(audit)); }
+    function saveUser() { localStorage.setItem('pacerUser', JSON.stringify(currentUser)); }
+
+    function logAction(action, details = {}) {
+      const entry = {
+        ts: new Date().toISOString(),
+        user: currentUser?.name || 'Unknown',
+        role: currentUser?.role || 'Unknown',
+        action,
+        ...details,
+      };
+      audit.unshift(entry);
+      saveAudit();
+      renderAudit();
+    }
+
+    // --- Elements ---
+    const caseForm = document.getElementById('caseForm');
+    const caseList = document.getElementById('caseList');
+    const searchInput = document.getElementById('searchInput');
+    const userBadge = document.getElementById('userBadge');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loginModal = document.getElementById('loginModal');
+    const confirmLogin = document.getElementById('confirmLogin');
+    const cancelLogin = document.getElementById('cancelLogin');
+    const userName = document.getElementById('userName');
+    const userRole = document.getElementById('userRole');
+    const caseFormLock = document.getElementById('caseFormLock');
+    const dataMgmtLock = document.getElementById('dataMgmtLock');
+    const clearFormBtn = document.getElementById('clearFormBtn');
+
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const importFile = document.getElementById('importFile');
+    const exportAuditBtn = document.getElementById('exportAuditBtn');
+
+    const auditList = document.getElementById('auditList');
+    const auditSearch = document.getElementById('auditSearch');
+    const clearAuditBtn = document.getElementById('clearAuditBtn');
+
+    // --- Role gating ---
+    function canDo(action) {
+      const role = currentUser?.role;
+      if (!role) return false;
+      const perms = {
+        'Docket Clerk': ['addCase', 'addDocket', 'removeDocket', 'import', 'export', 'exportAudit'],
+        'Judge': ['addDocket'],
+        'Staff': [],
+      };
+      return perms[role]?.includes(action);
+    }
+
+    function applyRoleUI() {
+      // Badge & buttons
+      if (currentUser) {
+        userBadge.classList.remove('hidden');
+        userBadge.textContent = `${currentUser.name} — ${currentUser.role}`;
+        loginBtn.classList.add('hidden');
+        logoutBtn.classList.remove('hidden');
+      } else {
+        userBadge.classList.add('hidden');
+        loginBtn.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+      }
+      // Case form
+      const disabledCaseForm = !canDo('addCase');
+      caseForm.querySelectorAll('input, select, textarea, button[type="submit"]').forEach(el => {
+        if (el.type === 'submit') el.disabled = disabledCaseForm;
+        else el.disabled = disabledCaseForm;
+      });
+      caseFormLock.textContent = disabledCaseForm ? 'Locked: only Docket Clerk can add new cases' : '';
+      // Data management
+      const mgmtDisabled = !(canDo('import') && canDo('export'));
+      exportBtn.disabled = mgmtDisabled;
+      importBtn.disabled = mgmtDisabled;
+      exportAuditBtn.disabled = !canDo('exportAudit');
+      dataMgmtLock.textContent = mgmtDisabled ? 'Locked: only Docket Clerk can import/export' : '';
+      // Re-render case list so per-entry controls reflect role
+      renderCases(searchInput.value || '');
+    }
+
+    // --- Renderers ---
+    function renderCases(filter = '') {
+      caseList.innerHTML = '';
+      const f = filter.toLowerCase();
+      const filtered = cases.filter(c =>
+        c.caseNumber.toLowerCase().includes(f) ||
+        c.caseTitle.toLowerCase().includes(f) ||
+        (c.parties||'').toLowerCase().includes(f) ||
+        (c.assignedJudge||'').toLowerCase().includes(f)
+      );
+      filtered.forEach((c, index) => {
+        const div = document.createElement('div');
+        div.className = 'bg-white shadow p-4 rounded border';
+        div.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="text-lg font-bold">${c.caseNumber} — ${c.caseTitle}</h3>
+              <p class="text-sm"><strong>Parties:</strong> ${c.parties}</p>
+              <p class="text-sm"><strong>Type:</strong> ${c.caseType}</p>
+              <p class="text-sm"><strong>Assigned Judge:</strong> ${c.assignedJudge || 'Chief Judge Jake Robinson'}</p>
+              <p class="text-sm"><strong>Notes:</strong> ${c.caseNotes || 'None'}</p>
+            </div>
+            <button class="bg-gray-700 text-white px-2 py-1 rounded h-8" onclick="openDocket(${index})">View Docket</button>
+          </div>
+          <div id="docket-${index}" class="hidden mt-4 bg-gray-50 p-3 rounded border">
+            <h4 class="font-semibold mb-2">Docket Entries</h4>
+            <ul id="docketList-${index}" class="mb-3 text-sm"></ul>
+            <div class="flex gap-2">
+              <input type="text" id="docketInput-${index}" placeholder="Add docket entry..." class="p-2 border rounded w-full" ${!canDo('addDocket') ? 'disabled' : ''} />
+              <button class="bg-blue-600 text-white px-3 py-2 rounded" onclick="addDocketEntry(${index})" ${!canDo('addDocket') ? 'disabled' : ''}>Add Entry</button>
+            </div>
+            ${canDo('removeDocket') ? '<p class="text-xs text-gray-500 mt-2">Tip: Use the remove button on individual entries to correct mistakes.</p>' : ''}
+          </div>
+        `;
+        caseList.appendChild(div);
+        // After attaching, render the docket list for this case if already open
+        // (optional: lazy render on open only)
+      });
+    }
+
+    function openDocket(index) {
+      const el = document.getElementById(`docket-${index}`);
+      el.classList.toggle('hidden');
+      renderDocket(index);
+    }
+
+    function renderDocket(index) {
+      const list = document.getElementById(`docketList-${index}`);
+      list.innerHTML = '';
+      if (!cases[index].docket) cases[index].docket = [];
+      cases[index].docket.forEach((entry, i) => {
+        const li = document.createElement('li');
+        li.className = 'flex justify-between items-center border-b py-1';
+        const left = document.createElement('span');
+        left.innerHTML = `• ${entry.text} <span class="text-[11px] text-gray-500">(${entry.date})</span>`;
+        li.appendChild(left);
+        if (canDo('removeDocket')) {
+          const btn = document.createElement('button');
+          btn.className = 'text-red-600 text-xs px-2 py-1 hover:underline';
+          btn.textContent = 'Remove';
+          btn.onclick = () => removeDocketEntry(index, i);
+          li.appendChild(btn);
+        }
+        list.appendChild(li);
+      });
+    }
+
+    // --- Actions ---
+    caseForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!canDo('addCase')) return alert('You do not have permission to add cases.');
+      const newCase = {
+        caseNumber: document.getElementById('caseNumber').value.trim(),
+        caseTitle: document.getElementById('caseTitle').value.trim(),
+        parties: document.getElementById('parties').value.trim(),
+        caseType: document.getElementById('caseType').value,
+        assignedJudge: document.getElementById('assignedJudge').value.trim(),
+        caseNotes: document.getElementById('caseNotes').value.trim(),
+        docket: []
+      };
+      if (!newCase.caseNumber || !newCase.caseTitle) return;
+      cases.push(newCase);
+      saveCases();
+      logAction('ADD_CASE', { caseNumber: newCase.caseNumber, title: newCase.caseTitle });
+      renderCases(searchInput.value);
+      caseForm.reset();
+    });
+
+    clearFormBtn.addEventListener('click', () => caseForm.reset());
+
+    function addDocketEntry(index) {
+      if (!canDo('addDocket')) return alert('You do not have permission to add docket entries.');
+      const input = document.getElementById(`docketInput-${index}`);
+      const value = input.value.trim();
+      if (!value) return;
+      const timestamp = new Date().toLocaleString();
+      if (!cases[index].docket) cases[index].docket = [];
+      cases[index].docket.push({ text: value, date: timestamp });
+      saveCases();
+      logAction('ADD_DOCKET', { caseNumber: cases[index].caseNumber, text: value });
+      renderDocket(index);
+      input.value = '';
+    }
+
+    function removeDocketEntry(caseIndex, docketIndex) {
+      if (!canDo('removeDocket')) return alert('You do not have permission to remove docket entries.');
+      const removed = cases[caseIndex].docket.splice(docketIndex, 1)[0];
+      saveCases();
+      logAction('REMOVE_DOCKET', { caseNumber: cases[caseIndex].caseNumber, text: removed?.text || '' });
+      renderDocket(caseIndex);
+    }
+
+    // Search
+    searchInput.addEventListener('input', (e) => renderCases(e.target.value));
+
+    // Import/Export
+    exportBtn.addEventListener('click', () => {
+      if (!canDo('export')) return alert('You do not have permission to export.');
+      const blob = new Blob([JSON.stringify(cases, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'pacer_cases_backup.json'; a.click();
+      URL.revokeObjectURL(url);
+      logAction('EXPORT_CASES');
+    });
+
+    importBtn.addEventListener('click', () => {
+      if (!canDo('import')) return alert('You do not have permission to import.');
+      importFile.click();
+    });
+
+    importFile.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (!Array.isArray(imported)) throw new Error('Invalid format');
+          cases = imported;
+          saveCases();
+          logAction('IMPORT_CASES', { count: cases.length });
+          renderCases(searchInput.value);
+        } catch (err) {
+          alert('Import failed: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Audit rendering & export
+    function renderAudit(filter = '') {
+      auditList.innerHTML = '';
+      const f = filter.toLowerCase();
+      const filtered = audit.filter(a =>
+        (a.user || '').toLowerCase().includes(f) ||
+        (a.action || '').toLowerCase().includes(f) ||
+        (a.caseNumber || '').toLowerCase().includes(f)
+      );
+      filtered.forEach(ae => {
+        const li = document.createElement('li');
+        li.className = 'border-b py-1';
+        li.innerHTML = `<span class="font-mono text-xs">${ae.ts}</span> — <span class="font-semibold">${ae.action}</span> — ${ae.caseNumber || ''} <span class="text-gray-600">by ${ae.user} (${ae.role})</span>`;
+        auditList.appendChild(li);
+      });
+    }
+
+    auditSearch.addEventListener('input', (e) => renderAudit(e.target.value));
+    clearAuditBtn.addEventListener('click', () => { auditSearch.value = ''; renderAudit(''); });
+
+    exportAuditBtn.addEventListener('click', () => {
+      if (!canDo('exportAudit')) return alert('You do not have permission to export audit logs.');
+      const blob = new Blob([JSON.stringify(audit, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'pacer_audit_log.json'; a.click();
+      URL.revokeObjectURL(url);
+      logAction('EXPORT_AUDIT');
+    });
+
+    // --- Auth (UI simulation) ---
+    function openLogin() { loginModal.classList.remove('hidden'); loginModal.classList.add('flex'); userName.focus(); }
+    function closeLogin() { loginModal.classList.add('hidden'); loginModal.classList.remove('flex'); }
+
+    loginBtn.addEventListener('click', openLogin);
+    cancelLogin.addEventListener('click', closeLogin);
+    confirmLogin.addEventListener('click', () => {
+      const name = userName.value.trim() || 'Staff';
+      const role = userRole.value;
+      currentUser = { name, role };
+      saveUser();
+      closeLogin();
+      applyRoleUI();
+      logAction('LOGIN', { user: name, role });
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      logAction('LOGOUT', { user: currentUser?.name, role: currentUser?.role });
+      currentUser = null;
+      saveUser();
+      applyRoleUI();
+    });
+
+    // --- Init ---
+    function init() {
+      applyRoleUI();
+      renderCases();
+      renderAudit();
+    }
+    init();
+  </script>
+</body>
+</html>
