@@ -1,190 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>United States District Court - PACER Staff Case Entry</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
-  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>United States District Court - PACER Staff Case Entry</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
 </head>
 <body class="bg-gray-100 text-gray-900">
-  <header class="bg-blue-900 text-white p-4">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <img src="ao-seal.png" alt="Court Seal" class="w-12 h-12" />
-        <div>
-          <h1 class="text-2xl font-bold">PACER Case Entry System</h1>
-          <p class="text-xs">United States District Court – Chambers of Chief Judge Jake Robinson</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3">
-        <span id="userBadge" class="hidden px-2 py-1 rounded bg-blue-700 text-white text-xs"></span>
-        <button id="loginBtn" class="bg-white text-blue-900 px-3 py-1 rounded hover:bg-gray-100 text-sm">Sign in</button>
-        <button id="logoutBtn" class="hidden bg-white text-blue-900 px-3 py-1 rounded hover:bg-gray-100 text-sm">Sign out</button>
-      </div>
-    </div>
-    <p class="text-center text-xs mt-2 opacity-90">Confidential Court Information – For Internal Use Only</p>
-  </header>
+<header class="bg-blue-900 text-white p-4">
+<div class="max-w-6xl mx-auto flex items-center justify-between">
+<div class="flex items-center gap-3">
+<img src="ao-seal.png" alt="Court Seal" class="w-12 h-12" />
+<div>
+<h1 class="text-2xl font-bold">PACER Case Entry System</h1>
+<p class="text-xs">United States District Court – Chambers of Chief Judge Jake Robinson</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span id="userBadge" class="hidden px-2 py-1 rounded bg-blue-700 text-white text-xs"></span>
+<button id="loginBtn" class="bg-white text-blue-900 px-3 py-1 rounded hover:bg-gray-100 text-sm">Sign in</button>
+<button id="logoutBtn" class="hidden bg-white text-blue-900 px-3 py-1 rounded hover:bg-gray-100 text-sm">Sign out</button>
+</div>
+</div>
+<p class="text-center text-xs mt-2 opacity-90">Confidential Court Information – For Internal Use Only</p>
+</header>
 
-  <main class="p-6 max-w-6xl mx-auto">
-    <!-- Case Status Filters -->
-    <div class="mb-4 flex gap-2 items-center">
-      <label for="statusFilter">Filter by Status:</label>
-      <select id="statusFilter" class="p-2 border rounded" onchange="renderCases(searchInput.value)">
-        <option value="all">All</option>
-        <option value="Pending">Pending</option>
-        <option value="Active">Active</option>
-        <option value="Closed">Closed</option>
-        <option value="On Hold">On Hold</option>
-      </select>
-    </div>
+<main class="p-6 max-w-6xl mx-auto">
+<section class="mb-8">
+<h2 class="text-xl font-semibold mb-4">New / Edit Case Entry</h2>
+<form id="caseForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded border">
+<input type="text" id="caseNumber" placeholder="Case Number" class="p-2 border rounded" required />
+<input type="text" id="caseTitle" placeholder="Case Title" class="p-2 border rounded" required />
+<input type="text" id="parties" placeholder="Parties Involved" class="p-2 border rounded md:col-span-2" required />
+<select id="caseType" class="p-2 border rounded" required>
+<option value="">Select Case Type</option>
+<option value="Civil">Civil</option>
+<option value="Criminal">Criminal</option>
+<option value="Bankruptcy">Bankruptcy</option>
+<option value="Appeals">Appeals</option>
+</select>
+<input type="text" id="assignedJudge" placeholder="Assigned Judge" class="p-2 border rounded" />
+<select id="caseStatus" class="p-2 border rounded">
+<option value="Pending">Pending</option>
+<option value="Active">Active</option>
+<option value="Closed">Closed</option>
+<option value="On Hold">On Hold</option>
+</select>
+<textarea id="caseNotes" placeholder="Internal Notes" class="p-2 border rounded md:col-span-2"></textarea>
+<div class="md:col-span-2 flex gap-2">
+<button type="submit" class="bg-blue-700 text-white p-2 rounded hover:bg-blue-800">Add / Update Case</button>
+<button type="button" id="clearFormBtn" class="bg-gray-200 p-2 rounded hover:bg-gray-300">Clear</button>
+</div>
+</form>
+</section>
 
-    <!-- Search -->
-    <section class="mb-8">
-      <h2 class="text-xl font-semibold mb-4">Search Cases</h2>
-      <div class="bg-white p-4 rounded border">
-        <input type="text" id="searchInput" placeholder="Search by Case Number, Title, Parties, Judge" class="p-2 border rounded w-full mb-4" oninput="renderCases(this.value)" />
-        <div id="caseList" class="space-y-4"></div>
-      </div>
-    </section>
+<div class="mb-4 flex gap-2 items-center">
+<label for="statusFilter">Filter by Status:</label>
+<select id="statusFilter" class="p-2 border rounded" onchange="renderCases(searchInput.value)">
+<option value="all">All</option>
+<option value="Pending">Pending</option>
+<option value="Active">Active</option>
+<option value="Closed">Closed</option>
+<option value="On Hold">On Hold</option>
+</select>
+</div>
 
-    <!-- Calendar Modal -->
-    <div id="calendarModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-40">
-      <div class="bg-white w-[95%] max-w-3xl rounded-2xl p-6 shadow-xl">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Case Calendar</h3>
-          <button class="px-2 py-1 bg-gray-300 rounded hover:bg-gray-400" onclick="closeCalendar()">Close</button>
-        </div>
-        <div id='calendar'></div>
-      </div>
-    </div>
+<section class="mb-8">
+<h2 class="text-xl font-semibold mb-4">Search Cases</h2>
+<div class="bg-white p-4 rounded border">
+<input type="text" id="searchInput" placeholder="Search by Case Number, Title, Parties, Judge" class="p-2 border rounded w-full mb-4" oninput="renderCases(this.value)" />
+<div id="caseList" class="space-y-4"></div>
+</div>
+</section>
+</main>
 
-    <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
-      <div class="bg-white w-[95%] max-w-md rounded-2xl p-6 shadow-xl">
-        <h3 class="text-lg font-semibold mb-2">Court Staff Sign In</h3>
-        <p class="text-xs text-gray-600 mb-4">This is for internal use only.</p>
-        <div class="space-y-3">
-          <input id="userName" class="p-2 border rounded w-full" placeholder="Your name" />
-          <select id="userRole" class="p-2 border rounded w-full">
-            <option value="Docket Clerk">Docket Clerk</option>
-            <option value="Judge">Judge</option>
-            <option value="Staff">Staff</option>
-          </select>
-        </div>
-        <div class="mt-5 flex justify-end gap-2">
-          <button id="cancelLogin" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
-          <button id="confirmLogin" class="px-3 py-1 rounded bg-blue-700 text-white hover:bg-blue-800">Sign In</button>
-        </div>
-      </div>
-    </div>
-  </main>
+<script>
+let cases = JSON.parse(localStorage.getItem('pacerCases')) || [];
+let currentUser = JSON.parse(localStorage.getItem('pacerUser')) || null;
 
-  <script>
-    let cases = JSON.parse(localStorage.getItem('pacerCases')) || [];
-    let currentUser = JSON.parse(localStorage.getItem('pacerUser')) || null;
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const userBadge = document.getElementById('userBadge');
+const caseForm = document.getElementById('caseForm');
+const searchInput = document.getElementById('searchInput');
 
-    // --- Login / Auth ---
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const loginModal = document.getElementById('loginModal');
-    const confirmLogin = document.getElementById('confirmLogin');
-    const cancelLogin = document.getElementById('cancelLogin');
-    const userName = document.getElementById('userName');
-    const userRole = document.getElementById('userRole');
-    const userBadge = document.getElementById('userBadge');
+function saveUser() { localStorage.setItem('pacerUser', JSON.stringify(currentUser)); }
+function saveCases() { localStorage.setItem('pacerCases', JSON.stringify(cases)); }
 
-    function saveUser() { localStorage.setItem('pacerUser', JSON.stringify(currentUser)); }
+function applyRoleUI() {
+  if (currentUser) {
+    userBadge.classList.remove('hidden');
+    userBadge.textContent = `${currentUser.name} — ${currentUser.role}`;
+    loginBtn.classList.add('hidden');
+    logoutBtn.classList.remove('hidden');
+  } else {
+    userBadge.classList.add('hidden');
+    loginBtn.classList.remove('hidden');
+    logoutBtn.classList.add('hidden');
+  }
+}
 
-    function applyRoleUI() {
-      if (currentUser) {
-        userBadge.classList.remove('hidden');
-        userBadge.textContent = `${currentUser.name} — ${currentUser.role}`;
-        loginBtn.classList.add('hidden');
-        logoutBtn.classList.remove('hidden');
-      } else {
-        userBadge.classList.add('hidden');
-        loginBtn.classList.remove('hidden');
-        logoutBtn.classList.add('hidden');
-      }
-    }
+loginBtn.addEventListener('click', () => {
+  const name = prompt('Enter your name');
+  const role = prompt('Enter role (Docket Clerk/Judge/Staff)');
+  currentUser = { name, role };
+  saveUser();
+  applyRoleUI();
+});
 
-    loginBtn.addEventListener('click', () => { loginModal.classList.remove('hidden'); loginModal.classList.add('flex'); });
-    cancelLogin.addEventListener('click', () => { loginModal.classList.add('hidden'); loginModal.classList.remove('flex'); });
-    confirmLogin.addEventListener('click', () => {
-      const name = userName.value.trim() || 'Staff';
-      const role = userRole.value;
-      currentUser = { name, role };
-      saveUser();
-      applyRoleUI();
-      loginModal.classList.add('hidden');
-      loginModal.classList.remove('flex');
-    });
-    logoutBtn.addEventListener('click', () => { currentUser = null; saveUser(); applyRoleUI(); });
+logoutBtn.addEventListener('click', () => {
+  currentUser = null;
+  saveUser();
+  applyRoleUI();
+});
 
-    applyRoleUI();
+caseForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const caseNumber = document.getElementById('caseNumber').value.trim();
+  const caseTitle = document.getElementById('caseTitle').value.trim();
+  const parties = document.getElementById('parties').value.trim();
+  const caseType = document.getElementById('caseType').value;
+  const assignedJudge = document.getElementById('assignedJudge').value.trim();
+  const status = document.getElementById('caseStatus').value;
+  const notes = document.getElementById('caseNotes').value.trim();
 
-    // --- Case Rendering and Calendar ---
-    function renderCases(filter='') {
-      const caseList = document.getElementById('caseList');
-      caseList.innerHTML = '';
-      const statusFilter = document.getElementById('statusFilter').value;
-      const f = filter.toLowerCase();
-      const filtered = cases.filter(c => {
-        const matchesSearch = c.caseNumber.toLowerCase().includes(f) || c.caseTitle.toLowerCase().includes(f);
-        const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
-        return matchesSearch && matchesStatus;
-      });
+  if (!caseNumber || !caseTitle) return;
 
-      filtered.forEach((c, idx) => {
-        const div = document.createElement('div');
-        div.className = 'bg-white shadow p-4 rounded border';
-        div.innerHTML = `
-          <div class='flex justify-between items-start gap-2'>
-            <div>
-              <h3 class='text-lg font-bold'>${c.caseNumber} — ${c.caseTitle}</h3>
-              <p><strong>Status:</strong> ${c.status || 'Pending'}</p>
-            </div>
-            <div class='flex gap-2'>
-              <button class='bg-blue-600 text-white px-2 py-1 rounded' onclick='openCalendar(${idx})'>View Calendar</button>
-            </div>
-          </div>
-        `;
-        caseList.appendChild(div);
-      });
-    }
+  const existingIndex = cases.findIndex(c => c.caseNumber === caseNumber);
+  if (existingIndex >= 0) {
+    cases[existingIndex] = { ...cases[existingIndex], caseTitle, parties, caseType, assignedJudge, status, notes };
+  } else {
+    cases.push({ caseNumber, caseTitle, parties, caseType, assignedJudge, status, notes, schedule: [] });
+  }
 
-    let activeCaseIndex = null;
-    let calendarInstance = null;
-    function openCalendar(idx) {
-      activeCaseIndex = idx;
-      document.getElementById('calendarModal').classList.remove('hidden');
-      const c = cases[idx];
-      const calendarEl = document.getElementById('calendar');
-      calendarEl.innerHTML = '';
-      calendarInstance = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
-        editable: true,
-        selectable: true,
-        events: c.schedule || [],
-        dateClick: function(info) {
-          const title = prompt('Event title:');
-          if (title) {
-            if (!c.schedule) c.schedule = [];
-            c.schedule.push({ title, start: info.dateStr });
-            localStorage.setItem('pacerCases', JSON.stringify(cases));
-            openCalendar(idx);
-          }
-        }
-      });
-      calendarInstance.render();
-    }
+  saveCases();
+  renderCases(searchInput.value);
+  caseForm.reset();
+});
 
-    function closeCalendar() { document.getElementById('calendarModal').classList.add('hidden'); calendarInstance?.destroy(); }
+document.getElementById('clearFormBtn').addEventListener('click', () => caseForm.reset());
 
-    renderCases();
-  </script>
+function renderCases(filter = '') {
+  const caseList = document.getElementById('caseList');
+  caseList.innerHTML = '';
+  const statusFilter = document.getElementById('statusFilter').value;
+  const f = filter.toLowerCase();
+
+  const filtered = cases.filter(c => {
+    const matchesSearch = c.caseNumber.toLowerCase().includes(f) || c.caseTitle.toLowerCase().includes(f) || (c.parties||'').toLowerCase().includes(f) || (c.assignedJudge||'').toLowerCase().includes(f);
+    const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  filtered.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'bg-white shadow p-4 rounded border';
+    div.innerHTML = `
+      <h3 class="font-bold">${c.caseNumber} — ${c.caseTitle}</h3>
+      <p><strong>Parties:</strong> ${c.parties}</p>
+      <p><strong>Type:</strong> ${c.caseType}</p>
+      <p><strong>Judge:</strong> ${c.assignedJudge || 'Chief Judge Jake Robinson'}</p>
+      <p><strong>Status:</strong> ${c.status}</p>
+      <p><strong>Notes:</strong> ${c.notes || 'None'}</p>
+    `;
+    caseList.appendChild(div);
+  });
+}
+
+renderCases();
+applyRoleUI();
+</script>
 </body>
 </html>
