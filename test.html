@@ -59,13 +59,73 @@
         <div id='calendar'></div>
       </div>
     </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
+      <div class="bg-white w-[95%] max-w-md rounded-2xl p-6 shadow-xl">
+        <h3 class="text-lg font-semibold mb-2">Court Staff Sign In</h3>
+        <p class="text-xs text-gray-600 mb-4">This is for internal use only.</p>
+        <div class="space-y-3">
+          <input id="userName" class="p-2 border rounded w-full" placeholder="Your name" />
+          <select id="userRole" class="p-2 border rounded w-full">
+            <option value="Docket Clerk">Docket Clerk</option>
+            <option value="Judge">Judge</option>
+            <option value="Staff">Staff</option>
+          </select>
+        </div>
+        <div class="mt-5 flex justify-end gap-2">
+          <button id="cancelLogin" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
+          <button id="confirmLogin" class="px-3 py-1 rounded bg-blue-700 text-white hover:bg-blue-800">Sign In</button>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script>
     let cases = JSON.parse(localStorage.getItem('pacerCases')) || [];
+    let currentUser = JSON.parse(localStorage.getItem('pacerUser')) || null;
 
-    function saveCases() { localStorage.setItem('pacerCases', JSON.stringify(cases)); }
+    // --- Login / Auth ---
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loginModal = document.getElementById('loginModal');
+    const confirmLogin = document.getElementById('confirmLogin');
+    const cancelLogin = document.getElementById('cancelLogin');
+    const userName = document.getElementById('userName');
+    const userRole = document.getElementById('userRole');
+    const userBadge = document.getElementById('userBadge');
 
+    function saveUser() { localStorage.setItem('pacerUser', JSON.stringify(currentUser)); }
+
+    function applyRoleUI() {
+      if (currentUser) {
+        userBadge.classList.remove('hidden');
+        userBadge.textContent = `${currentUser.name} — ${currentUser.role}`;
+        loginBtn.classList.add('hidden');
+        logoutBtn.classList.remove('hidden');
+      } else {
+        userBadge.classList.add('hidden');
+        loginBtn.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+      }
+    }
+
+    loginBtn.addEventListener('click', () => { loginModal.classList.remove('hidden'); loginModal.classList.add('flex'); });
+    cancelLogin.addEventListener('click', () => { loginModal.classList.add('hidden'); loginModal.classList.remove('flex'); });
+    confirmLogin.addEventListener('click', () => {
+      const name = userName.value.trim() || 'Staff';
+      const role = userRole.value;
+      currentUser = { name, role };
+      saveUser();
+      applyRoleUI();
+      loginModal.classList.add('hidden');
+      loginModal.classList.remove('flex');
+    });
+    logoutBtn.addEventListener('click', () => { currentUser = null; saveUser(); applyRoleUI(); });
+
+    applyRoleUI();
+
+    // --- Case Rendering and Calendar ---
     function renderCases(filter='') {
       const caseList = document.getElementById('caseList');
       caseList.innerHTML = '';
@@ -114,7 +174,7 @@
           if (title) {
             if (!c.schedule) c.schedule = [];
             c.schedule.push({ title, start: info.dateStr });
-            saveCases();
+            localStorage.setItem('pacerCases', JSON.stringify(cases));
             openCalendar(idx);
           }
         }
@@ -122,10 +182,7 @@
       calendarInstance.render();
     }
 
-    function closeCalendar() {
-      document.getElementById('calendarModal').classList.add('hidden');
-      calendarInstance?.destroy();
-    }
+    function closeCalendar() { document.getElementById('calendarModal').classList.add('hidden'); calendarInstance?.destroy(); }
 
     renderCases();
   </script>
