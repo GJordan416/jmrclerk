@@ -1,176 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>United States District Court - PACER Staff Case Entry</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PACER Staff Case Scheduler</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@5.11.3/main.min.js"></script>
+<style>
+  .calendar-container { max-width: 900px; margin: auto; }
+  .draggable-docket { cursor: grab; background:#f3f4f6; margin:2px 0; padding:2px 4px; border-radius:4px; }
+</style>
 </head>
 <body class="bg-gray-100 text-gray-900">
 <header class="bg-blue-900 text-white p-4">
-<div class="max-w-6xl mx-auto flex items-center justify-between">
-<div class="flex items-center gap-3">
-<img src="ao-seal.png" alt="Court Seal" class="w-12 h-12" />
-<div>
-<h1 class="text-2xl font-bold">PACER Case Entry System</h1>
-<p class="text-xs">United States District Court – Chambers of Chief Judge Jake Robinson</p>
-</div>
-</div>
-<div class="flex items-center gap-3">
-<span id="userBadge" class="hidden px-2 py-1 rounded bg-blue-700 text-white text-xs"></span>
-<button id="loginBtn" class="bg-white text-blue-900 px-3 py-1 rounded hover:bg-gray-100 text-sm">Sign in</button>
-<button id="logoutBtn" class="hidden bg-white text-blue-900 px-3 py-1 rounded hover:bg-gray-100 text-sm">Sign out</button>
-</div>
-</div>
-<p class="text-center text-xs mt-2 opacity-90">Confidential Court Information – For Internal Use Only</p>
+  <div class="max-w-6xl mx-auto flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img src="ao-seal.png" alt="Court Seal" class="w-12 h-12">
+      <div>
+        <h1 class="text-2xl font-bold">PACER Case Scheduler</h1>
+        <p class="text-xs">Chambers of Chief Judge Jake Robinson</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="userBadge" class="hidden px-2 py-1 rounded bg-blue-700 text-white text-xs"></span>
+      <button id="loginBtn" class="bg-white text-blue-900 px-3 py-1 rounded hover:bg-gray-100 text-sm">Sign in</button>
+      <button id="logoutBtn" class="hidden bg-white text-blue-900 px-3 py-1 rounded hover:bg-gray-100 text-sm">Sign out</button>
+    </div>
+  </div>
 </header>
 
 <main class="p-6 max-w-6xl mx-auto">
-<section class="mb-8">
-<h2 class="text-xl font-semibold mb-4">New / Edit Case Entry</h2>
-<form id="caseForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded border">
-<input type="text" id="caseNumber" placeholder="Case Number" class="p-2 border rounded" required />
-<input type="text" id="caseTitle" placeholder="Case Title" class="p-2 border rounded" required />
-<input type="text" id="parties" placeholder="Parties Involved" class="p-2 border rounded md:col-span-2" required />
-<select id="caseType" class="p-2 border rounded" required>
-<option value="">Select Case Type</option>
-<option value="Civil">Civil</option>
-<option value="Criminal">Criminal</option>
-<option value="Bankruptcy">Bankruptcy</option>
-<option value="Appeals">Appeals</option>
-</select>
-<input type="text" id="assignedJudge" placeholder="Assigned Judge" class="p-2 border rounded" />
-<select id="caseStatus" class="p-2 border rounded">
-<option value="Pending">Pending</option>
-<option value="Active">Active</option>
-<option value="Closed">Closed</option>
-<option value="On Hold">On Hold</option>
-</select>
-<textarea id="caseNotes" placeholder="Internal Notes" class="p-2 border rounded md:col-span-2"></textarea>
-<div class="md:col-span-2 flex gap-2">
-<button type="submit" class="bg-blue-700 text-white p-2 rounded hover:bg-blue-800">Add / Update Case</button>
-<button type="button" id="clearFormBtn" class="bg-gray-200 p-2 rounded hover:bg-gray-300">Clear</button>
-</div>
-</form>
+
+<!-- Case Entry Form -->
+<section class="mb-8 bg-white p-4 rounded shadow">
+  <h2 class="text-xl font-semibold mb-4">Add / Edit Case</h2>
+  <form id="caseForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <input type="text" id="caseNumber" placeholder="Case Number" class="p-2 border rounded" required>
+    <input type="text" id="caseTitle" placeholder="Case Title" class="p-2 border rounded" required>
+    <input type="text" id="parties" placeholder="Parties Involved" class="p-2 border rounded md:col-span-2" required>
+    <select id="caseType" class="p-2 border rounded" required>
+      <option value="">Select Type</option>
+      <option value="Civil">Civil</option>
+      <option value="Criminal">Criminal</option>
+      <option value="Bankruptcy">Bankruptcy</option>
+      <option value="Appeals">Appeals</option>
+    </select>
+    <input type="text" id="assignedJudge" placeholder="Assigned Judge" class="p-2 border rounded">
+    <select id="caseStatus" class="p-2 border rounded">
+      <option value="Pending">Pending</option>
+      <option value="Active">Active</option>
+      <option value="Closed">Closed</option>
+      <option value="On Hold">On Hold</option>
+    </select>
+    <textarea id="caseNotes" placeholder="Internal Notes" class="p-2 border rounded md:col-span-2"></textarea>
+    <div class="md:col-span-2 flex gap-2">
+      <button type="submit" class="bg-blue-700 text-white p-2 rounded hover:bg-blue-800">Add / Update Case</button>
+      <button type="button" id="clearFormBtn" class="bg-gray-200 p-2 rounded hover:bg-gray-300">Clear</button>
+    </div>
+  </form>
 </section>
 
-<div class="mb-4 flex gap-2 items-center">
-<label for="statusFilter">Filter by Status:</label>
-<select id="statusFilter" class="p-2 border rounded" onchange="renderCases(searchInput.value)">
-<option value="all">All</option>
-<option value="Pending">Pending</option>
-<option value="Active">Active</option>
-<option value="Closed">Closed</option>
-<option value="On Hold">On Hold</option>
-</select>
-</div>
-
+<!-- Case List & Docket -->
 <section class="mb-8">
-<h2 class="text-xl font-semibold mb-4">Search Cases</h2>
-<div class="bg-white p-4 rounded border">
-<input type="text" id="searchInput" placeholder="Search by Case Number, Title, Parties, Judge" class="p-2 border rounded w-full mb-4" oninput="renderCases(this.value)" />
-<div id="caseList" class="space-y-4"></div>
-</div>
+  <h2 class="text-xl font-semibold mb-4">Cases</h2>
+  <div id="caseList" class="space-y-4"></div>
 </section>
+
+<!-- Calendar -->
+<section class="calendar-container mb-8">
+  <h2 class="text-xl font-semibold mb-4">Case Calendar</h2>
+  <div id="calendar"></div>
+</section>
+
+<!-- Audit Log -->
+<section class="mb-8 bg-white p-4 rounded shadow">
+  <h2 class="text-xl font-semibold mb-4">Audit Log</h2>
+  <ul id="auditList" class="space-y-1 text-sm"></ul>
+</section>
+
 </main>
 
+<!-- Login Modal -->
+<div id="loginModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
+  <div class="bg-white w-[95%] max-w-md rounded-2xl p-6 shadow-xl">
+    <h3 class="text-lg font-semibold mb-2">Court Staff Sign In</h3>
+    <div class="space-y-3">
+      <input id="userName" class="p-2 border rounded w-full" placeholder="Your name">
+      <select id="userRole" class="p-2 border rounded w-full">
+        <option value="Docket Clerk">Docket Clerk</option>
+        <option value="Judge">Judge</option>
+        <option value="Staff">Staff</option>
+      </select>
+    </div>
+    <div class="mt-5 flex justify-end gap-2">
+      <button id="cancelLogin" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
+      <button id="confirmLogin" class="px-3 py-1 rounded bg-blue-700 text-white hover:bg-blue-800">Sign In</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// --- Storage ---
 let cases = JSON.parse(localStorage.getItem('pacerCases')) || [];
+let events = JSON.parse(localStorage.getItem('pacerEvents')) || [];
+let audit = JSON.parse(localStorage.getItem('pacerAuditLog')) || [];
 let currentUser = JSON.parse(localStorage.getItem('pacerUser')) || null;
+let selectedCaseIndex = null;
 
-const loginBtn = document.getElementById('loginBtn');
-const logoutBtn = document.getElementById('logoutBtn');
-const userBadge = document.getElementById('userBadge');
-const caseForm = document.getElementById('caseForm');
-const searchInput = document.getElementById('searchInput');
+function saveCases(){ localStorage.setItem('pacerCases', JSON.stringify(cases)); }
+function saveEvents(){ localStorage.setItem('pacerEvents', JSON.stringify(events)); }
+function saveAudit(){ localStorage.setItem('pacerAuditLog', JSON.stringify(audit)); }
+function saveUser(){ localStorage.setItem('pacerUser', JSON.stringify(currentUser)); }
 
-function saveUser() { localStorage.setItem('pacerUser', JSON.stringify(currentUser)); }
-function saveCases() { localStorage.setItem('pacerCases', JSON.stringify(cases)); }
-
-function applyRoleUI() {
-  if (currentUser) {
-    userBadge.classList.remove('hidden');
-    userBadge.textContent = `${currentUser.name} — ${currentUser.role}`;
-    loginBtn.classList.add('hidden');
-    logoutBtn.classList.remove('hidden');
-  } else {
-    userBadge.classList.add('hidden');
-    loginBtn.classList.remove('hidden');
-    logoutBtn.classList.add('hidden');
-  }
+function logAction(action, details={}){ 
+  audit.unshift({ts:new Date().toISOString(), user:currentUser?.name||'Unknown', role:currentUser?.role||'Unknown', action, ...details}); 
+  saveAudit(); renderAudit();
 }
 
-loginBtn.addEventListener('click', () => {
-  const name = prompt('Enter your name');
-  const role = prompt('Enter role (Docket Clerk/Judge/Staff)');
-  currentUser = { name, role };
-  saveUser();
-  applyRoleUI();
-});
+// --- Role ---
+function canDo(action){
+  const perms={'Docket Clerk':['addCase','addDocket'],'Judge':['addDocket'],'Staff':[]};
+  return currentUser && perms[currentUser.role]?.includes(action);
+}
 
-logoutBtn.addEventListener('click', () => {
-  currentUser = null;
-  saveUser();
-  applyRoleUI();
-});
+function applyRoleUI(){
+  const badge=document.getElementById('userBadge');
+  const loginBtn=document.getElementById('loginBtn');
+  const logoutBtn=document.getElementById('logoutBtn');
+  if(currentUser){ badge.classList.remove('hidden'); badge.textContent=`${currentUser.name} — ${currentUser.role}`; loginBtn.classList.add('hidden'); logoutBtn.classList.remove('hidden'); }
+  else{ badge.classList.add('hidden'); loginBtn.classList.remove('hidden'); logoutBtn.classList.add('hidden'); }
+}
 
-caseForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const caseNumber = document.getElementById('caseNumber').value.trim();
-  const caseTitle = document.getElementById('caseTitle').value.trim();
-  const parties = document.getElementById('parties').value.trim();
-  const caseType = document.getElementById('caseType').value;
-  const assignedJudge = document.getElementById('assignedJudge').value.trim();
-  const status = document.getElementById('caseStatus').value;
-  const notes = document.getElementById('caseNotes').value.trim();
-
-  if (!caseNumber || !caseTitle) return;
-
-  const existingIndex = cases.findIndex(c => c.caseNumber === caseNumber);
-  if (existingIndex >= 0) {
-    cases[existingIndex] = { ...cases[existingIndex], caseTitle, parties, caseType, assignedJudge, status, notes };
-  } else {
-    cases.push({ caseNumber, caseTitle, parties, caseType, assignedJudge, status, notes, schedule: [] });
-  }
-
-  saveCases();
-  renderCases(searchInput.value);
-  caseForm.reset();
-});
-
-document.getElementById('clearFormBtn').addEventListener('click', () => caseForm.reset());
-
-function renderCases(filter = '') {
-  const caseList = document.getElementById('caseList');
-  caseList.innerHTML = '';
-  const statusFilter = document.getElementById('statusFilter').value;
-  const f = filter.toLowerCase();
-
-  const filtered = cases.filter(c => {
-    const matchesSearch = c.caseNumber.toLowerCase().includes(f) || c.caseTitle.toLowerCase().includes(f) || (c.parties||'').toLowerCase().includes(f) || (c.assignedJudge||'').toLowerCase().includes(f);
-    const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  filtered.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'bg-white shadow p-4 rounded border';
-    div.innerHTML = `
-      <h3 class="font-bold">${c.caseNumber} — ${c.caseTitle}</h3>
-      <p><strong>Parties:</strong> ${c.parties}</p>
-      <p><strong>Type:</strong> ${c.caseType}</p>
-      <p><strong>Judge:</strong> ${c.assignedJudge || 'Chief Judge Jake Robinson'}</p>
-      <p><strong>Status:</strong> ${c.status}</p>
-      <p><strong>Notes:</strong> ${c.notes || 'None'}</p>
+// --- Cases ---
+function renderCaseList(){
+  const list=document.getElementById('caseList');
+  list.innerHTML='';
+  cases.forEach((c,i)=>{
+    const div=document.createElement('div'); div.className='bg-white p-4 rounded shadow';
+    div.innerHTML=`
+      <div class="flex justify-between">
+        <div>
+          <h3 class="font-bold">${c.caseNumber} — ${c.caseTitle}</h3>
+          <p><strong>Parties:</strong> ${c.parties}</p>
+          <p><strong>Type:</strong> ${c.caseType}</p>
+          <p><strong>Judge:</strong> ${c.assignedJudge}</p>
+          <p><strong>Status:</strong> ${c.caseStatus}</p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <button class="bg-blue-600 text-white p-1 rounded" onclick="editCase(${i})">Edit</button>
+          <button class="bg-red-600 text-white p-1 rounded" onclick="deleteCase(${i})">Delete</button>
+        </div>
+      </div>
+      <div class="mt-2">
+        <strong>Dockets:</strong>
+        <ul id="docket-${i}" class="space-y-1"></ul>
+        <div class="flex gap-2 mt-1">
+          <input id="docketInput-${i}" class="p-1 border rounded flex-1" placeholder="New docket entry" ${!canDo('addDocket')?'disabled':''}>
+          <button class="bg-green-600 text-white px-2 rounded" onclick="addDocket(${i})" ${!canDo('addDocket')?'disabled':''}>Add</button>
+        </div>
+      </div>
     `;
-    caseList.appendChild(div);
+    list.appendChild(div);
+    renderDockets(i);
   });
 }
 
-renderCases();
-applyRoleUI();
+function editCase(i){
+  selectedCaseIndex=i;
+  const c=cases[i];
+  document.getElementById('caseNumber').value=c.caseNumber;
+  document.getElementById('caseTitle').value=c.caseTitle;
+  document.getElementById('parties').value=c.parties;
+  document.getElementById('caseType').value=c.caseType;
+  document.getElementById('assignedJudge').value=c.assignedJudge;
+  document.getElementById('caseStatus').value=c.caseStatus;
+  document.getElementById('caseNotes').value=c.caseNotes;
+}
+
+function deleteCase(i){
+  if(confirm('Delete this case?')){ cases.splice(i,1); saveCases(); renderCaseList(); logAction('DELETE_CASE'); }
+}
+
+// --- Dockets ---
+function addDocket(i){
+  const input=document.getElementById(`docketInput-${i}`);
+  const val=input.value.trim(); if(!val) return;
+  if(!cases[i].docket) cases[i].docket=[];
+  cases[i].docket.push(val); saveCases(); logAction('ADD_DOCKET',{caseNumber:cases[i].caseNumber,text:val}); input.value=''; renderDockets(i);
+}
+
+function renderDockets(i){
+  const ul=document.getElementById(`docket-${i}`);
+  ul.innerHTML='';
+  const c=cases[i];
+  if(!c.docket) c.docket=[];
+  c.docket.forEach((d,j)=>{
+    const li=document.createElement('li');
+    li.className='draggable-docket'; li.setAttribute('draggable','true'); li.textContent=d;
+    li.addEventListener('dragstart',ev=>{ ev.dataTransfer.setData('text/plain',JSON.stringify({title:`${c.caseNumber} — ${d} [${c.caseStatus}]`,caseNumber:c.caseNumber,status:c.caseStatus})); });
+    ul.appendChild(li);
+  });
+}
+
+// --- Case Form ---
+document.getElementById('caseForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const newCase={caseNumber:document.getElementById('caseNumber').value.trim(),
+                 caseTitle:document.getElementById('caseTitle').value.trim(),
+                 parties:document.getElementById('parties').value.trim(),
+                 caseType:document.getElementById('caseType').value,
+                 assignedJudge:document.getElementById('assignedJudge').value,
+                 caseStatus:document.getElementById('caseStatus').value,
+                 caseNotes:document.getElementById('caseNotes').value,
+                 docket:[]};
+  if(selectedCaseIndex!==null){ cases[selectedCaseIndex]=newCase; selectedCaseIndex=null; }
+  else{ cases.push(newCase); }
+  saveCases(); renderCaseList(); logAction('ADD_OR_UPDATE_CASE',{caseNumber:newCase.caseNumber}); e.target.reset();
+});
+document.getElementById('clearFormBtn').addEventListener('click',()=>{ document.getElementById('caseForm').reset(); selectedCaseIndex=null; });
+
+// --- Calendar ---
+const calendarEl=document.getElementById('calendar');
+const calendar=new FullCalendar.Calendar(calendarEl,{
+  initialView:'dayGridMonth',
+  headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,timeGridDay'},
+  editable:true, selectable:true, droppable:true,
+  events:events.map(evt=>({...evt,color:getStatusColor(evt.status)})),
+  dateClick:info=>{
+    if(selectedCaseIndex===null) return alert('Select a case to schedule');
+    const c=cases[selectedCaseIndex];
+    const title=prompt('Event title',`${c.caseNumber} — ${c.caseTitle} [${c.caseStatus}]`);
+    if(title){ const evt={title,start:info.dateStr,caseNumber:c.caseNumber,status:c.caseStatus}; events.push(evt); calendar.addEvent({...evt,color:getStatusColor(evt.status)}); saveEvents(); }
+  },
+  eventReceive:info=>{
+    events.push({title:info.event.title,start:info.event.startStr,caseNumber:info.event.extendedProps.caseNumber,status:info.event.extendedProps.status});
+    saveEvents();
+  }
+});
+calendar.render();
+
+function getStatusColor(status){ switch(status){ case 'Pending': return '#ffc107'; case 'Active': return '#28a745'; case 'Closed': return '#dc3545'; case 'On Hold': return '#fd7e14'; default:return '#0d6efd'; } }
+
+// --- Audit ---
+function renderAudit(){ const ul=document.getElementById('auditList'); ul.innerHTML=''; audit.forEach(ae=>{ const li=document.createElement('li'); li.textContent=`[${ae.ts}] ${ae.user} (${ae.role}) - ${ae.action}`; ul.appendChild(li); }); }
+
+// --- Login ---
+function openLogin(){ document.getElementById('loginModal').classList.remove('hidden'); document.getElementById('userName').focus(); }
+function closeLogin(){ document.getElementById('loginModal').classList.add('hidden'); }
+
+document.getElementById('loginBtn').addEventListener('click',openLogin);
+document.getElementById('cancelLogin').addEventListener('click',closeLogin);
+document.getElementById('confirmLogin').addEventListener('click',()=>{
+  const name=document.getElementById('userName').value.trim()||'Staff';
+  const role=document.getElementById('userRole').value;
+  currentUser={name,role}; saveUser(); closeLogin(); applyRoleUI(); logAction('LOGIN',{user:name,role});
+});
+document.getElementById('logoutBtn').addEventListener('click',()=>{ logAction('LOGOUT',{user:currentUser?.name,role:currentUser?.role}); currentUser=null; saveUser(); applyRoleUI(); });
+
+// --- Init ---
+applyRoleUI(); renderCaseList(); renderAudit();
 </script>
 </body>
 </html>
