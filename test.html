@@ -8,9 +8,7 @@
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
 </head>
-<body class="bg-gray-100 text-gray-900 transition-colors duration-300" id="body">
-  <button class="fixed top-4 right-4 bg-blue-700 text-white px-3 py-1 rounded z-50" onclick="toggleDarkMode()">Toggle Dark Mode</button>
-
+<body class="bg-gray-100 text-gray-900">
   <header class="bg-blue-900 text-white p-4">
     <div class="max-w-6xl mx-auto flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -53,9 +51,9 @@
 
     <!-- Calendar Modal -->
     <div id="calendarModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-40">
-      <div class="bg-white dark:bg-gray-800 w-[95%] max-w-3xl rounded-2xl p-6 shadow-xl">
+      <div class="bg-white w-[95%] max-w-3xl rounded-2xl p-6 shadow-xl">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Case Calendar</h3>
+          <h3 class="text-lg font-semibold text-gray-900">Case Calendar</h3>
           <button class="px-2 py-1 bg-gray-300 rounded hover:bg-gray-400" onclick="closeCalendar()">Close</button>
         </div>
         <div id='calendar'></div>
@@ -64,15 +62,6 @@
   </main>
 
   <script>
-    let darkMode = false;
-    function toggleDarkMode() {
-      darkMode = !darkMode;
-      document.getElementById('body').classList.toggle('bg-gray-100', !darkMode);
-      document.getElementById('body').classList.toggle('text-gray-900', !darkMode);
-      document.getElementById('body').classList.toggle('bg-gray-900', darkMode);
-      document.getElementById('body').classList.toggle('text-gray-100', darkMode);
-    }
-
     let cases = JSON.parse(localStorage.getItem('pacerCases')) || [];
 
     function saveCases() { localStorage.setItem('pacerCases', JSON.stringify(cases)); }
@@ -90,7 +79,7 @@
 
       filtered.forEach((c, idx) => {
         const div = document.createElement('div');
-        div.className = 'bg-white dark:bg-gray-800 shadow p-4 rounded border';
+        div.className = 'bg-white shadow p-4 rounded border';
         div.innerHTML = `
           <div class='flex justify-between items-start gap-2'>
             <div>
