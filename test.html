@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>United States District Court - PACER Staff Case Entry</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+<style>
+  body { font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
+  header { background: #00274d; color: white; padding: 1rem; display: flex; align-items: center; }
+  header img { height: 60px; margin-right: 1rem; }
+  h1 { margin: 0; font-size: 1.5rem; }
+  .case { background: #fff; margin: 1rem; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; }
+  .case-status { padding: 0.3rem 0.5rem; border-radius: 6px; color: #fff; font-weight: bold; display: inline-block; }
+  .status-pending { background: #ffc107; }
+  .status-active { background: #28a745; }
+  .status-closed { background: #dc3545; }
+  .status-onhold { background: #fd7e14; }
+  .legend { background: #fff; padding: 1rem; margin: 1rem; border: 1px solid #ccc; border-radius: 8px; }
+  .legend h2 { margin-top: 0; font-size: 1.2rem; }
+  .legend-item { display: flex; align-items: center; margin: 0.3rem 0; }
+  .legend-color { width: 20px; height: 20px; margin-right: 0.5rem; border-radius: 4px; }
+  .filters { margin: 1rem; }
+  .calendar-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 1rem; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 1000; width: 600px; }
+  .calendar-popup.active { display: block; }
+  .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .editable { border-bottom: 1px dashed #888; cursor: text; }
+</style>
+</head>
+<body>
+<header>
+  <img src="court-logo.png" alt="United States District Court Seal">
+  <h1>Chambers of Chief Judge Jake Robinson - PACER Case Entry</h1>
+</header>
+<main>
+  <div class="legend">
+    <h2>Case Status Legend</h2>
+    <div class="legend-item"><div class="legend-color" style="background:#ffc107"></div>Pending</div>
+    <div class="legend-item"><div class="legend-color" style="background:#28a745"></div>Active</div>
+    <div class="legend-item"><div class="legend-color" style="background:#dc3545"></div>Closed</div>
+    <div class="legend-item"><div class="legend-color" style="background:#fd7e14"></div>On Hold</div>
+  </div>
+
+  <div class="filters">
+    <label for="statusFilter">Filter by Status: </label>
+    <select id="statusFilter" onchange="filterCases()">
+      <option value="all">All</option>
+      <option value="Pending">Pending</option>
+      <option value="Active">Active</option>
+      <option value="Closed">Closed</option>
+      <option value="On Hold">On Hold</option>
+    </select>
+  </div>
+
+  <div id="caseList"></div>
+  <div class="calendar-popup" id="calendarPopup">
+    <div class="calendar-header">
+      <h2>Case Schedule</h2>
+      <button onclick="closeCalendar()">Close</button>
+    </div>
+    <div id="calendar"></div>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script>
+let cases = JSON.parse(localStorage.getItem('pacerCases')) || [
+  { id: 1, title: 'Case A', status: 'Pending', description: 'Initial filing stage.', schedule: [] },
+  { id: 2, title: 'Case B', status: 'Active', description: 'In active trial phase.', schedule: [] },
+  { id: 3, title: 'Case C', status: 'Closed', description: 'Judgment delivered.', schedule: [] }
+];
+
+function saveCases() {
+  localStorage.setItem('pacerCases', JSON.stringify(cases));
+}
+
+function getStatusClass(status) {
+  switch(status) {
+    case 'Pending': return 'status-pending';
+    case 'Active': return 'status-active';
+    case 'Closed': return 'status-closed';
+    case 'On Hold': return 'status-onhold';
+    default: return '';
+  }
+}
+
+function renderCases(filter = 'all') {
+  const list = document.getElementById('caseList');
+  list.innerHTML = '';
+  cases.filter(c => filter === 'all' || c.status === filter).forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'case';
+    div.innerHTML = `
+      <h3 contenteditable="true" oninput="updateCase(${c.id}, 'title', this.innerText)" class="editable">${c.title}</h3>
+      <p contenteditable="true" oninput="updateCase(${c.id}, 'description', this.innerText)" class="editable">${c.description}</p>
+      <span class="case-status ${getStatusClass(c.status)}">${c.status}</span>
+      <br><br>
+      <select onchange="updateCase(${c.id}, 'status', this.value)">
+        <option ${c.status==='Pending'?'selected':''}>Pending</option>
+        <option ${c.status==='Active'?'selected':''}>Active</option>
+        <option ${c.status==='Closed'?'selected':''}>Closed</option>
+        <option ${c.status==='On Hold'?'selected':''}>On Hold</option>
+      </select>
+      <button onclick="openCalendar(${c.id})">View Schedule</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function updateCase(id, field, value) {
+  const c = cases.find(c => c.id === id);
+  if (c) {
+    c[field] = value;
+    saveCases();
+    renderCases(document.getElementById('statusFilter').value);
+  }
+}
+
+function filterCases() {
+  renderCases(document.getElementById('statusFilter').value);
+}
+
+let activeCaseId = null;
+function openCalendar(id) {
+  activeCaseId = id;
+  document.getElementById('calendarPopup').classList.add('active');
+  const calendarEl = document.getElementById('calendar');
+  calendarEl.innerHTML = '';
+  const c = cases.find(c => c.id === activeCaseId);
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
+    editable: true,
+    selectable: true,
+    events: c.schedule.map(e => ({ title: e.title, start: e.date })),
+    dateClick: function(info) {
+      const title = prompt('Event title:');
+      if(title) {
+        c.schedule.push({ title, date: info.dateStr });
+        saveCases();
+        openCalendar(activeCaseId); // Refresh calendar
+      }
+    }
+  });
+  calendar.render();
+}
+
+function closeCalendar() {
+  document.getElementById('calendarPopup').classList.remove('active');
+}
+
+renderCases();
+</script>
+</body>
+</html>
